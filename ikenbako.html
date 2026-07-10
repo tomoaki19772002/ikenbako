@@ -224,6 +224,7 @@
     <div class="form-group">
       <label for="email">メールアドレス<span class="optional-tag">任意</span></label>
       <input type="email" id="email" name="email" placeholder="例：example@mail.com">
+      <div class="field-error" id="emailError"></div>
     </div>
 
     <div class="form-group">
@@ -267,6 +268,8 @@
   const submitBtn = document.getElementById('submitBtn');
   const statusMessage = document.getElementById('statusMessage');
   const messageError = document.getElementById('messageError');
+  const emailError = document.getElementById('emailError');
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -274,10 +277,17 @@
     statusMessage.className = 'status-message';
     statusMessage.textContent = '';
     messageError.textContent = '';
+    emailError.textContent = '';
 
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
     const message = document.getElementById('message').value.trim();
+
+    if (email && !EMAIL_PATTERN.test(email)) {
+      emailError.textContent = 'メールアドレスの形式が正しくありません（空欄でも送信できます）';
+      document.getElementById('email').focus();
+      return;
+    }
 
     if (!message) {
       messageError.textContent = 'ご意見箱の内容をご入力ください';
