@@ -161,21 +161,6 @@
       color: #c62828;
     }
 
-    /* Web3Forms の設定が未完了の場合に表示される案内 */
-    .setup-notice {
-      margin-top: 32px;
-      padding: 20px;
-      background: #fff3cd;
-      border: 2px solid #ffc107;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      color: #856404;
-      line-height: 1.7;
-      text-align: left;
-    }
-
-    .setup-notice strong { display: block; margin-bottom: 6px; font-size: 1rem; }
-
     /* 送信中スピナー */
     .spinner {
       display: inline-block;
@@ -237,33 +222,9 @@
 
     <div class="status-message" id="statusMessage"></div>
   </form>
-
-  <!-- Web3Forms の設定が未完了の場合に表示される案内 -->
-  <div class="setup-notice" id="setupNotice" style="display:none;">
-    <strong>設定が必要です</strong>
-    フォームを送信可能にするには、Web3Forms のアクセスキーが必要です。<br>
-    1. <code>https://web3forms.com</code> にアクセスし、送信先メールアドレス
-    （<code>tomoaki19772002@gmail.com</code>）で無料登録してください。<br>
-    2. 発行された Access Key を、このHTMLファイル内の <code>WEB3FORMS_ACCESS_KEY</code> に貼り付けてください。
-  </div>
 </div>
 
 <script>
-  // ============================================================
-  //  ★ Web3Forms のアクセスキーをここに貼り付けてください ★
-  //  (https://web3forms.com で無料登録し、発行されたキーを設定)
-  //  送信先メールアドレスは Web3Forms 登録時に指定した
-  //  tomoaki19772002@gmail.com になります。
-  // ============================================================
-  const WEB3FORMS_ACCESS_KEY = 'eb9664f1-e3ef-4527-8355-b106812c107c';
-  // ============================================================
-
-  const IS_CONFIGURED = WEB3FORMS_ACCESS_KEY !== 'YOUR_ACCESS_KEY_HERE' && WEB3FORMS_ACCESS_KEY.trim() !== '';
-
-  if (!IS_CONFIGURED) {
-    document.getElementById('setupNotice').style.display = 'block';
-  }
-
   const form = document.getElementById('ikenbakoForm');
   const submitBtn = document.getElementById('submitBtn');
   const statusMessage = document.getElementById('statusMessage');
@@ -300,42 +261,26 @@
       return;
     }
 
-    if (!IS_CONFIGURED) {
-      statusMessage.className = 'status-message error';
-      statusMessage.textContent = '送信の設定が完了していません。管理者にお問い合わせください。';
-      return;
-    }
-
-    const payload = {
-      access_key: WEB3FORMS_ACCESS_KEY,
-      subject: '【川越あさひ眼科】ご意見箱への投稿',
-      from_name: name || '匿名',
-      name: name || '匿名',
-      message: message
-    };
-    if (email) payload.email = email;
+    const payload = { name, email, message };
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner"></span>送信中...';
 
     try {
-      const res = await fetch('https://api.web3forms.com/submit', {
+      const res = await fetch('/api/submit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok && data.success) {
         statusMessage.className = 'status-message success';
         statusMessage.textContent = 'ご意見を送信しました。ありがとうございました。';
         form.reset();
       } else {
         statusMessage.className = 'status-message error';
-        statusMessage.textContent = '送信に失敗しました。しばらくしてから再度お試しください。';
+        statusMessage.textContent = data.error || '送信に失敗しました。しばらくしてから再度お試しください。';
       }
     } catch (err) {
       statusMessage.className = 'status-message error';
